@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql
+    volumes:
+      - mysql_data:/var/lib/mysql
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    networks:
+      - pm_network
+    healthcheck:
+      test: "/usr/bin/mysql --host=localhost --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      timeout: 20s
+      retries: 10
+
+  express:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    networks:
+      - pm_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  pm_network:
